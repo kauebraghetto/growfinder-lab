@@ -43,12 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 function enviar_reset($nome, $email, $token) {
-    $remetente_nome  = 'Growfinder Lab';
-    $remetente_email = 'noreply@growfinder.com.br';
-    $smtp_host       = 'smtp.hostinger.com';
-    $smtp_port       = 465;
-    $smtp_user       = 'noreply@growfinder.com.br';
-    $smtp_pass       = 'Luma@2026';
+    $remetente_nome  = SMTP_FROM_NAME;
+    $remetente_email = SMTP_FROM_EMAIL;
+    $smtp_host       = SMTP_HOST;
+    $smtp_port       = SMTP_PORT;
+    $smtp_user       = SMTP_USER;
+    $smtp_pass       = SMTP_PASS;
 
     $assunto = 'Redefinição de senha — Growfinder Lab';
     $link    = 'https://lab.growfinder.com.br/reset-senha.php?token=' . $token;

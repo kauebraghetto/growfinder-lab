@@ -27,22 +27,25 @@ try {
 
 // ── FUNÇÃO DE E-MAIL ────────────────────────────
 function enviar_boas_vindas($nome, $email, $senha) {
-    $remetente_nome  = 'Growfinder Lab';
-    $remetente_email = 'noreply@growfinder.com.br';
-    $smtp_host       = 'smtp.hostinger.com';
-    $smtp_port       = 465;
-    $smtp_user       = 'noreply@growfinder.com.br';
-    $smtp_pass       = 'Luma@2026';
+    $remetente_nome  = SMTP_FROM_NAME;
+    $remetente_email = SMTP_FROM_EMAIL;
+    $smtp_host       = SMTP_HOST;
+    $smtp_port       = SMTP_PORT;
+    $smtp_user       = SMTP_USER;
+    $smtp_pass       = SMTP_PASS;
 
     $assunto  = 'Seu acesso ao Growfinder Lab';
     $link     = 'https://lab.growfinder.com.br';
+    $nome_safe  = htmlspecialchars($nome,  ENT_QUOTES, 'UTF-8');
+    $email_safe = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+    $senha_safe = htmlspecialchars($senha, ENT_QUOTES, 'UTF-8');
 
     $corpo = "
     <html><body style='font-family:sans-serif;color:#000;max-width:520px;margin:0 auto;padding:32px 16px'>
-      <p>Olá, <strong>$nome</strong>!</p>
+      <p>Olá, <strong>$nome_safe</strong>!</p>
       <p>Seu acesso ao Growfinder Lab foi criado. Abaixo estão suas credenciais:</p>
-      <p><strong>E-mail:</strong> $email<br>
-         <strong>Senha inicial:</strong> $senha</p>
+      <p><strong>E-mail:</strong> $email_safe<br>
+         <strong>Senha inicial:</strong> $senha_safe</p>
       <p style='margin:24px 0'>
         <a href='$link' style='background:#FF4B34;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold'>Acessar o Growfinder Lab</a>
       </p>
@@ -99,6 +102,10 @@ function enviar_boas_vindas($nome, $email, $senha) {
 }
 
 // ── AÇÕES ──────────────────────────────────────
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();
+}
 
 // Cadastrar novo mentorado
 if (isset($_POST['acao']) && $_POST['acao'] === 'cadastrar') {
@@ -195,10 +202,33 @@ if (isset($_POST['acao']) && $_POST['acao'] === 'cms_upload') {
     } elseif (empty($_FILES['arquivo']['name'])) {
         $erro = 'Selecione um arquivo.';
     } else {
-        $ext = strtolower(pathinfo($_FILES['arquivo']['name'], PATHINFO_EXTENSION));
+        $ext      = strtolower(pathinfo($_FILES['arquivo']['name'], PATHINFO_EXTENSION));
+        $max_size = 10 * 1024 * 1024; // 10 MB
+        $mimes_permitidos = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/plain',
+            'text/markdown',
+        ];
+
         if (!in_array($ext, $extensoes_permitidas)) {
             $erro = 'Extensão não permitida. Use: ' . implode(', ', $extensoes_permitidas);
+        } elseif ($_FILES['arquivo']['size'] > $max_size) {
+            $erro = 'Arquivo muito grande. Máximo permitido: 10 MB.';
         } else {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime  = finfo_file($finfo, $_FILES['arquivo']['tmp_name']);
+            finfo_close($finfo);
+
+            if (!in_array($mime, $mimes_permitidos)) {
+                $erro = 'Tipo de arquivo não permitido.';
+            }
+        }
+
+        if (!$erro) {
             $nome_arquivo = uniqid() . '.' . $ext;
             $destino = __DIR__ . '/uploads/' . $nome_arquivo;
             if (move_uploaded_file($_FILES['arquivo']['tmp_name'], $destino)) {
@@ -262,13 +292,16 @@ $usuarios = $pdo->query('SELECT * FROM usuarios ORDER BY criado_em DESC')->fetch
 
 $conteudos = $pdo->query('SELECT * FROM conteudos ORDER BY status ASC, criado_em DESC')->fetchAll();
 
+$page = $_GET['page'] ?? 'mentorados';
+if (!in_array($page, ['mentorados', 'conteudos'])) $page = 'mentorados';
+
 $page_title = 'Growfinder Lab · Admin';
 include 'layouts/header-admin.php';
 ?>
 
 <div class="admin-main">
   <div class="admin-page-title">Administração</div>
-  <div class="page-sub">Gerencie os mentorados do Growfinder Lab.</div>
+  <div class="page-sub"><?= $page === 'mentorados' ? 'Gerencie os mentorados do Growfinder Lab.' : 'Gerencie os conteúdos do Growfinder Lab.' ?></div>
 
   <?php if ($msg): ?>
     <div class="msg-box ok"><?= htmlspecialchars($msg) ?></div>
@@ -277,318 +310,11 @@ include 'layouts/header-admin.php';
     <div class="msg-box err"><?= htmlspecialchars($erro) ?></div>
   <?php endif; ?>
 
-  <!-- CADASTRAR -->
-  <div class="admin-card">
-    <div class="admin-card-header">
-      <span class="admin-card-title">Cadastrar novo mentorado</span>
-    </div>
-    <div class="admin-card-body">
-      <form method="POST">
-        <input type="hidden" name="acao" value="cadastrar">
-        <div class="form-grid">
-          <div class="field-wrap">
-            <label class="field-label">Nome</label>
-            <input type="text" name="nome" placeholder="Nome completo" required>
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">E-mail</label>
-            <input type="email" name="email" placeholder="email@exemplo.com" required>
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Senha inicial</label>
-            <input type="password" name="senha" placeholder="mín. 8 caracteres" required>
-          </div>
-          <button class="btn-add" type="submit">+ Cadastrar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- LISTA -->
-  <div class="admin-card">
-    <div class="admin-card-header">
-      <span class="admin-card-title">Mentorados (<?= count($usuarios) ?>)</span>
-    </div>
-    <div class="admin-card-body flush">
-      <?php if (empty($usuarios)): ?>
-        <div class="empty-state">Nenhum mentorado cadastrado.</div>
-      <?php else: ?>
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>E-mail</th>
-            <th>Status</th>
-            <th>Último acesso</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($usuarios as $u): ?>
-
-          <!-- Linha principal -->
-          <tr class="user-row">
-            <td class="td-name"><?= htmlspecialchars($u['nome']) ?></td>
-            <td class="td-email"><?= htmlspecialchars($u['email']) ?></td>
-            <td>
-              <?php if ($u['ativo']): ?>
-                <span class="badge-ativo">Ativo</span>
-              <?php else: ?>
-                <span class="badge-inativo">Suspenso</span>
-              <?php endif; ?>
-            </td>
-            <td class="td-date">
-              <?= $u['ultimo_acesso'] ? (new DateTime($u['ultimo_acesso']))->format('d/m/Y H:i') : '—' ?>
-            </td>
-            <td>
-              <div class="acoes">
-
-                <!-- Toggle ativo/inativo -->
-                <form method="POST" class="inline-form">
-                  <input type="hidden" name="acao" value="toggle">
-                  <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                  <input type="hidden" name="ativo" value="<?= $u['ativo'] ?>">
-                  <?php if ($u['ativo']): ?>
-                    <button class="btn-sm btn-suspender" type="submit" onclick="return confirm('Suspender acesso de <?= htmlspecialchars($u['nome']) ?>?')">Suspender</button>
-                  <?php else: ?>
-                    <button class="btn-sm btn-reativar" type="submit">Reativar</button>
-                  <?php endif; ?>
-                </form>
-
-                <!-- Abrir reset de senha -->
-                <button class="btn-sm btn-reset-toggle" type="button" onclick="toggleReset(<?= $u['id'] ?>)">Resetar senha</button>
-
-                <!-- Deletar -->
-                <form method="POST" class="inline-form">
-                  <input type="hidden" name="acao" value="deletar">
-                  <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                  <button class="btn-del" type="submit" title="Remover" onclick="return confirm('Remover <?= htmlspecialchars($u['nome']) ?> permanentemente?')">×</button>
-                </form>
-
-              </div>
-            </td>
-          </tr>
-
-          <!-- Linha de reset (expandida) -->
-          <tr class="reset-row" id="reset-<?= $u['id'] ?>">
-            <td colspan="5">
-              <form method="POST">
-                <input type="hidden" name="acao" value="resetar">
-                <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                <div class="reset-inner">
-                  <span class="reset-label">Nova senha para <?= htmlspecialchars($u['nome']) ?></span>
-                  <input class="reset-input" type="password" name="senha_reset" placeholder="mínimo 8 caracteres" required>
-                  <button class="btn-reset-confirm" type="submit">Confirmar</button>
-                  <button class="btn-cancel" type="button" onclick="toggleReset(<?= $u['id'] ?>)">Cancelar</button>
-                </div>
-              </form>
-            </td>
-          </tr>
-
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-      <?php endif; ?>
-    </div>
-  </div>
-
-  <!-- CONTEÚDOS CMS -->
-  <div class="admin-card">
-    <div class="admin-card-header">
-      <span class="admin-card-title">Conteúdos (<?= count($conteudos) ?>)</span>
-    </div>
-    <div class="admin-card-body flush">
-      <?php if (empty($conteudos)): ?>
-        <div class="empty-state">Nenhum conteúdo cadastrado.</div>
-      <?php else: ?>
-      <table>
-        <thead>
-          <tr>
-            <th>Título</th>
-            <th>Tipo</th>
-            <th>Categoria</th>
-            <th>Status</th>
-            <th>Data</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($conteudos as $c): ?>
-          <tr class="user-row">
-            <td class="td-name"><?= htmlspecialchars($c['titulo']) ?></td>
-            <td><?= $c['tipo'] === 'artigo' ? 'Artigo' : 'Arquivo' ?></td>
-            <td><?= htmlspecialchars($c['categoria'] ?: '—') ?></td>
-            <td>
-              <?php if ($c['status'] === 'publicado'): ?>
-                <span class="badge-ativo">Publicado</span>
-              <?php else: ?>
-                <span class="badge-inativo">Rascunho</span>
-              <?php endif; ?>
-            </td>
-            <td class="td-date"><?= (new DateTime($c['criado_em']))->format('d/m/Y') ?></td>
-            <td>
-              <div class="acoes">
-                <form method="POST" class="inline-form">
-                  <input type="hidden" name="acao" value="cms_toggle">
-                  <input type="hidden" name="id" value="<?= $c['id'] ?>">
-                  <input type="hidden" name="status" value="<?= $c['status'] ?>">
-                  <?php if ($c['status'] === 'publicado'): ?>
-                    <button class="btn-sm btn-suspender" type="submit">Despublicar</button>
-                  <?php else: ?>
-                    <button class="btn-sm btn-reativar" type="submit">Publicar</button>
-                  <?php endif; ?>
-                </form>
-                <button class="btn-sm btn-reset-toggle" type="button" onclick="toggleEdit(<?= $c['id'] ?>)">Editar</button>
-                <form method="POST" class="inline-form">
-                  <input type="hidden" name="acao" value="cms_deletar">
-                  <input type="hidden" name="id" value="<?= $c['id'] ?>">
-                  <button class="btn-del" type="submit" title="Remover" onclick="return confirm('Remover este conteúdo?')">×</button>
-                </form>
-              </div>
-            </td>
-          </tr>
-
-          <tr class="reset-row" id="edit-<?= $c['id'] ?>">
-            <td colspan="6">
-              <form method="POST" class="cms-edit-form">
-                <input type="hidden" name="acao" value="cms_editar">
-                <input type="hidden" name="id" value="<?= $c['id'] ?>">
-                <div class="cms-edit-grid">
-                  <div class="field-wrap">
-                    <label class="field-label">Título</label>
-                    <input type="text" name="titulo" value="<?= htmlspecialchars($c['titulo']) ?>" required>
-                  </div>
-                  <div class="field-wrap">
-                    <label class="field-label">Categoria</label>
-                    <input type="text" name="categoria" value="<?= htmlspecialchars($c['categoria']) ?>">
-                  </div>
-                  <div class="field-wrap">
-                    <label class="field-label">Tags (separar por vírgula)</label>
-                    <input type="text" name="tags" value="<?= htmlspecialchars($c['tags']) ?>">
-                  </div>
-                  <div class="field-wrap">
-                    <label class="field-label">Status</label>
-                    <select name="status" style="width:100%;background:var(--bg);border:1px solid rgba(0,0,0,0.12);border-radius:7px;padding:10px 12px;font-family:var(--f);font-size:13px;outline:none;">
-                      <option value="rascunho" <?= $c['status'] === 'rascunho' ? 'selected' : '' ?>>Rascunho</option>
-                      <option value="publicado" <?= $c['status'] === 'publicado' ? 'selected' : '' ?>>Publicado</option>
-                    </select>
-                  </div>
-                  <div class="field-wrap">
-                    <label class="field-label">Ordem</label>
-                    <input type="number" name="ordem" value="<?= $c['ordem'] ?>" min="0" style="width:80px">
-                  </div>
-                  <div class="field-wrap">
-                    <label class="field-label">Descrição</label>
-                    <input type="text" name="descricao" value="<?= htmlspecialchars($c['descricao'] ?? '') ?>">
-                  </div>
-                  <?php if ($c['tipo'] === 'artigo'): ?>
-                  <div class="field-wrap" style="grid-column:1/-1">
-                    <label class="field-label">Corpo (Markdown)</label>
-                    <textarea name="corpo" rows="8" style="width:100%;background:var(--bg);border:1px solid rgba(0,0,0,0.12);border-radius:7px;padding:10px 12px;font-family:var(--f);font-size:13px;outline:none;resize:vertical;line-height:1.6"><?= htmlspecialchars($c['corpo'] ?? '') ?></textarea>
-                  </div>
-                  <?php endif; ?>
-                  <div style="display:flex;gap:10px;align-items:center">
-                    <button class="btn-reset-confirm" type="submit">Salvar</button>
-                    <button class="btn-cancel" type="button" onclick="toggleEdit(<?= $c['id'] ?>)">Cancelar</button>
-                  </div>
-                </div>
-              </form>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-      <?php endif; ?>
-    </div>
-  </div>
-
-  <!-- NOVO ARTIGO -->
-  <div class="admin-card">
-    <div class="admin-card-header">
-      <span class="admin-card-title">Novo artigo (Markdown)</span>
-    </div>
-    <div class="admin-card-body">
-      <form method="POST">
-        <input type="hidden" name="acao" value="cms_novo_artigo">
-        <div class="cms-form-grid">
-          <div class="field-wrap">
-            <label class="field-label">Título *</label>
-            <input type="text" name="titulo" required>
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Categoria</label>
-            <input type="text" name="categoria">
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Tags (vírgula)</label>
-            <input type="text" name="tags">
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Status</label>
-            <select name="status" style="width:100%;background:var(--bg);border:1px solid rgba(0,0,0,0.12);border-radius:7px;padding:10px 12px;font-family:var(--f);font-size:13px;outline:none;">
-              <option value="rascunho">Rascunho</option>
-              <option value="publicado">Publicado</option>
-            </select>
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Descrição</label>
-            <input type="text" name="descricao">
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Ordem</label>
-            <input type="number" name="ordem" value="0" min="0" style="width:80px">
-          </div>
-          <div class="field-wrap" style="grid-column:1/-1">
-            <label class="field-label">Corpo (Markdown)</label>
-            <textarea name="corpo" rows="10" style="width:100%;background:var(--bg);border:1px solid rgba(0,0,0,0.12);border-radius:7px;padding:10px 12px;font-family:var(--f);font-size:13px;outline:none;resize:vertical;line-height:1.6"></textarea>
-          </div>
-          <button class="btn-add" type="submit">+ Criar artigo</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- UPLOAD ARQUIVO -->
-  <div class="admin-card">
-    <div class="admin-card-header">
-      <span class="admin-card-title">Upload de arquivo</span>
-    </div>
-    <div class="admin-card-body">
-      <form method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="acao" value="cms_upload">
-        <div class="cms-form-grid">
-          <div class="field-wrap">
-            <label class="field-label">Título *</label>
-            <input type="text" name="titulo" required>
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Arquivo *</label>
-            <input type="file" name="arquivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.md" required style="font-size:13px">
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Categoria</label>
-            <input type="text" name="categoria">
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Tags (vírgula)</label>
-            <input type="text" name="tags">
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Status</label>
-            <select name="status" style="width:100%;background:var(--bg);border:1px solid rgba(0,0,0,0.12);border-radius:7px;padding:10px 12px;font-family:var(--f);font-size:13px;outline:none;">
-              <option value="rascunho">Rascunho</option>
-              <option value="publicado">Publicado</option>
-            </select>
-          </div>
-          <div class="field-wrap">
-            <label class="field-label">Descrição</label>
-            <input type="text" name="descricao">
-          </div>
-          <button class="btn-add" type="submit">↑ Enviar arquivo</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <?php if ($page === 'mentorados'): ?>
+    <?php include 'admin/mentorados.php'; ?>
+  <?php else: ?>
+    <?php include 'admin/conteudos.php'; ?>
+  <?php endif; ?>
 
 </div>
 
