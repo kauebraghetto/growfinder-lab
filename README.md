@@ -6,6 +6,26 @@ Plataforma de mentoria da Growfinder — área exclusiva para mentorados com mat
 
 ---
 
+## Funcionalidades
+
+### Área do mentorado
+- Login com e-mail e senha (bloqueio após 5 tentativas incorretas por 15 min)
+- Listagem de materiais agrupados por categoria, com filtro e busca
+- Leitura de artigos em Markdown ou HTML com sumário automático e barra de progresso
+- Download de arquivos disponibilizados pelo admin
+- Troca de senha via perfil (exige senha atual)
+- Recuperação de senha via e-mail com token de uso único (expira em 1h)
+
+### Painel admin
+- Login independente com sessão separada e timeout de 2h
+- Gestão de mentorados: cadastro, suspensão/reativação, reset de senha e remoção
+- E-mail automático de boas-vindas ao cadastrar um novo mentorado (via SMTP)
+- CMS de conteúdos: criação e edição de artigos, upload de arquivos
+- Controle de status por conteúdo (`publicado` ou `rascunho`)
+- Ordenação personalizada dos conteúdos por categoria
+
+---
+
 ## Stack
 
 - PHP 8+ (sem framework)
@@ -20,16 +40,19 @@ Plataforma de mentoria da Growfinder — área exclusiva para mentorados com mat
 
 ```
 ├── index.php              # Login de mentorados
-├── materiais.php          # Página principal (conteúdos do banco)
-├── artigo.php             # Exibição de artigos (Markdown/HTML)
+├── materiais.php          # Listagem de conteúdos
+├── artigo.php             # Leitura de artigos (Markdown/HTML)
 ├── perfil.php             # Perfil e troca de senha
 ├── esqueci-senha.php      # Solicitação de reset de senha
-├── reset-senha.php        # Redefinição de senha
+├── reset-senha.php        # Redefinição de senha via token
 ├── logout.php             # Encerrar sessão
 ├── admin-login.php        # Login do admin
-├── admin.php              # Painel admin (mentorados + CMS de conteúdos)
+├── admin.php              # Painel admin (mentorados + CMS)
 ├── admin-logout.php       # Encerrar sessão admin
-├── config.php             # Credenciais do banco (não commitado)
+├── admin/
+│   ├── mentorados.php     # UI de gestão de mentorados
+│   └── conteudos.php      # UI do CMS de conteúdos
+├── config.php             # Credenciais e configurações (não commitado)
 ├── assets/
 │   ├── Parsedown.php      # Parser Markdown
 │   └── css/               # base, layout, components, login, admin, artigo
@@ -42,10 +65,20 @@ Plataforma de mentoria da Growfinder — área exclusiva para mentorados com mat
 
 ---
 
-## Autenticação
+## Segurança
 
-- **Mentorados:** sessão `gf_lab_session`, timeout 8h
-- **Admin:** sessão `gf_admin_session`, timeout 2h, máx. 5 tentativas de login
+- Senhas armazenadas com bcrypt
+- Consultas SQL via PDO com prepared statements (sem SQL injection)
+- Proteção CSRF em todos os formulários do painel admin
+- Rate limiting por sessão nos logins (5 tentativas → bloqueio de 15 min)
+- `session_regenerate_id()` após cada login
+- Timeout de sessão: 8h (mentorados) e 2h (admin)
+- Parsedown em modo seguro (bloqueia HTML bruto em Markdown)
+- Conteúdo HTML sanitizado com allowlist de tags antes de renderizar
+- Upload validado por extensão e MIME type, limite de 10 MB
+- `.htaccess` na pasta `uploads/` bloqueia execução de PHP
+- Headers HTTP: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`
+- Credenciais SMTP centralizadas em `config.php` (fora do repositório)
 
 ---
 
@@ -87,7 +120,7 @@ Plataforma de mentoria da Growfinder — área exclusiva para mentorados com mat
 
 ## Configuração local
 
-1. Configure um servidor Apache + PHP + MySQL (ex: XAMPP ou Laragon)
+1. Configure um servidor Apache + PHP 8+ + MySQL (ex: XAMPP ou Laragon)
 2. Aponte para este diretório
 3. Importe o banco e crie o arquivo `config.php`:
 
@@ -99,10 +132,17 @@ define('DB_USER',    'root');
 define('DB_PASS',    '');
 define('DB_CHARSET', 'utf8mb4');
 
+define('SMTP_HOST',       'smtp.exemplo.com');
+define('SMTP_PORT',       465);
+define('SMTP_USER',       'noreply@exemplo.com');
+define('SMTP_PASS',       '');
+define('SMTP_FROM_NAME',  'Growfinder Lab');
+define('SMTP_FROM_EMAIL', 'noreply@exemplo.com');
+
 define('SESSION_NAME',    'gf_lab_session');
 define('SESSION_TIMEOUT', 28800);
 
-function db_connect() {
+function db_connect(): PDO {
     $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
     return new PDO($dsn, DB_USER, DB_PASS, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -117,13 +157,3 @@ function db_connect() {
 ## Deploy
 
 Via WinSCP ou FileZilla para `public_html/lab/` na Hostinger. Não subir `config.php`.
-
----
-
-## CMS de Conteúdos
-
-O painel admin possui um CMS para publicar artigos e upload de arquivos sem editar código. Conteúdos são exibidos dinamicamente em `materiais.php` agrupados por categoria.
-
-- Artigos: corpo em Markdown, renderizado via Parsedown
-- Arquivos: upload para `uploads/` (extensões permitidas: .pdf, .doc, .docx, .xls, .xlsx, .md)
-- Status: `publicado` (visível) ou `rascunho` (oculto)
