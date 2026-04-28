@@ -20,24 +20,24 @@ Plataforma de mentoria da Growfinder — área exclusiva para mentorados com mat
 
 ```
 ├── index.php              # Login de mentorados
-├── materiais.php          # Página principal de conteúdos
+├── materiais.php          # Página principal (conteúdos do banco)
+├── artigo.php             # Exibição de artigos (Markdown/HTML)
 ├── perfil.php             # Perfil e troca de senha
-├── guia-llm.php           # Guia LLM (6 módulos)
 ├── esqueci-senha.php      # Solicitação de reset de senha
 ├── reset-senha.php        # Redefinição de senha
 ├── logout.php             # Encerrar sessão
 ├── admin-login.php        # Login do admin
-├── admin.php              # Painel admin (mentorados + conteúdos)
+├── admin.php              # Painel admin (mentorados + CMS de conteúdos)
 ├── admin-logout.php       # Encerrar sessão admin
 ├── config.php             # Credenciais do banco (não commitado)
 ├── assets/
-│   └── css/               # base, layout, components, login, admin
+│   ├── Parsedown.php      # Parser Markdown
+│   └── css/               # base, layout, components, login, admin, artigo
 ├── layouts/
 │   ├── header.php
 │   ├── footer.php
 │   └── header-admin.php
-└── modulos/
-    └── llm/               # mod1.php – mod6.php
+└── uploads/               # Arquivos enviados via CMS (.htaccess protege execução)
 ```
 
 ---
