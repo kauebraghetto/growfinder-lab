@@ -503,6 +503,27 @@ body.admin-login {
   .header-admin { padding: 0 20px; }
   .admin-main { padding: 24px 16px 48px; }
   .form-grid { grid-template-columns: 1fr; }
+  .cms-form-grid { grid-template-columns: 1fr; }
+  .cms-edit-grid { grid-template-columns: 1fr; }
   footer { padding: 16px 20px; flex-direction: column; gap: 6px; text-align: center; }
   table { display: block; overflow-x: auto; }
+}
+
+/* ── CMS FORMS ── */
+.cms-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.cms-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.cms-edit-form textarea {
+  font-size: 12px;
 }

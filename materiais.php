@@ -4,7 +4,6 @@ require_once 'config.php';
 session_name(SESSION_NAME);
 session_start();
 
-// Verificar autenticação e timeout de sessão
 if (empty($_SESSION['usuario_id'])) {
     header('Location: index.php');
     exit;
@@ -19,6 +18,17 @@ if (time() - ($_SESSION['login_time'] ?? 0) > SESSION_TIMEOUT) {
 $nome = $_SESSION['usuario_nome'];
 $email = $_SESSION['usuario_email'];
 $page_title = 'Growfinder Lab · Materiais';
+
+$pdo = db_connect();
+$conteudos = $pdo->query("SELECT * FROM conteudos WHERE status = 'publicado' ORDER BY ordem ASC, criado_em DESC")->fetchAll();
+
+$categorias = [];
+foreach ($conteudos as $c) {
+    $cat = $c['categoria'] ?: 'Sem categoria';
+    if (!isset($categorias[$cat])) $categorias[$cat] = [];
+    $categorias[$cat][] = $c;
+}
+
 include 'layouts/header.php';
 ?>
 
@@ -29,92 +39,74 @@ include 'layouts/header.php';
 
 <div class="mat-main">
 
+<?php foreach ($categorias as $cat => $items): ?>
   <div class="mat-section-header">
-    <span class="mat-section-title">Fundamentos</span>
-    <span class="mat-section-count">1 material</span>
+    <span class="mat-section-title"><?= htmlspecialchars($cat) ?></span>
+    <span class="mat-section-count"><?= count($items) ?> material<?= count($items) > 1 ? 'is' : '' ?></span>
   </div>
 
   <div class="grid">
-    <a class="mat-card" href="guia-llm.php" target="_blank">
+  <?php foreach ($items as $c): ?>
+    <?php if ($c['tipo'] === 'artigo'): ?>
+    <a class="mat-card" href="artigo.php?id=<?= $c['id'] ?>">
       <div class="mat-card-top">
-        <div class="mat-tag">Guia · 6 módulos</div>
-        <div class="mat-title">Entendendo os LLMs: como a IA que você usa foi criada</div>
+        <div class="mat-tag"><?= htmlspecialchars($c['categoria'] ?: 'Artigo') ?></div>
+        <div class="mat-title"><?= htmlspecialchars($c['titulo']) ?></div>
       </div>
       <div class="mat-card-body">
-        <div class="mat-desc">Do dado bruto ao assistente alinhado. Conceitos técnicos em linguagem de negócio — do que é um LLM até agentes e o panorama dos próximos dois anos.</div>
+        <?php if ($c['descricao']): ?>
+        <div class="mat-desc"><?= htmlspecialchars($c['descricao']) ?></div>
+        <?php endif; ?>
         <div class="mat-meta">
           <div class="mat-chips">
-            <span class="mat-chip">LLM</span>
-            <span class="mat-chip">Transformer</span>
-            <span class="mat-chip">Agentes</span>
+          <?php if ($c['tags']): ?>
+            <?php foreach (explode(',', $c['tags']) as $tag): ?>
+              <?php $tag = trim($tag); if ($tag): ?>
+            <span class="mat-chip"><?= htmlspecialchars($tag) ?></span>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          <?php endif; ?>
           </div>
           <span class="mat-arrow">→</span>
         </div>
       </div>
     </a>
+    <?php else: ?>
+    <a class="mat-card" href="uploads/<?= htmlspecialchars($c['arquivo']) ?>" download>
+      <div class="mat-card-top">
+        <div class="mat-tag"><?= strtoupper(pathinfo($c['arquivo'], PATHINFO_EXTENSION)) ?></div>
+        <div class="mat-title"><?= htmlspecialchars($c['titulo']) ?></div>
+      </div>
+      <div class="mat-card-body">
+        <?php if ($c['descricao']): ?>
+        <div class="mat-desc"><?= htmlspecialchars($c['descricao']) ?></div>
+        <?php endif; ?>
+        <div class="mat-meta">
+          <div class="mat-chips">
+          <?php if ($c['tags']): ?>
+            <?php foreach (explode(',', $c['tags']) as $tag): ?>
+              <?php $tag = trim($tag); if ($tag): ?>
+            <span class="mat-chip"><?= htmlspecialchars($tag) ?></span>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          <?php endif; ?>
+          </div>
+          <span class="mat-arrow" style="font-size:14px">↓</span>
+        </div>
+      </div>
+    </a>
+    <?php endif; ?>
+  <?php endforeach; ?>
   </div>
 
-  <div class="mat-divider"></div>
+<?php endforeach; ?>
 
+<?php if (empty($categorias)): ?>
   <div class="mat-section-header">
-    <span class="mat-section-title">Em breve</span>
-    <span class="mat-section-count">próximos conteúdos</span>
+    <span class="mat-section-title">Nenhum material publicado ainda.</span>
   </div>
+<?php endif; ?>
 
-  <div class="grid">
-
-    <div class="mat-card soon">
-      <div class="mat-card-top">
-        <span class="soon-badge">Em breve</span>
-        <div class="mat-tag">Guia prático</div>
-        <div class="mat-title">Qual IA usar para cada tipo de tarefa</div>
-      </div>
-      <div class="mat-card-body">
-        <div class="mat-desc">Um mapa prático de ferramentas: quando usar ChatGPT, Claude, Gemini e ferramentas especializadas — e por quê.</div>
-        <div class="mat-meta">
-          <div class="mat-chips">
-            <span class="mat-chip">Ferramentas</span>
-            <span class="mat-chip">Comparativo</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mat-card soon">
-      <div class="mat-card-top">
-        <span class="soon-badge">Em breve</span>
-        <div class="mat-tag">Conceito</div>
-        <div class="mat-title">O que são agentes de IA — e como funcionam na prática</div>
-      </div>
-      <div class="mat-card-body">
-        <div class="mat-desc">Da definição técnica aos casos de uso reais em PMEs e manufatura. Como orquestrar agentes para automatizar processos complexos.</div>
-        <div class="mat-meta">
-          <div class="mat-chips">
-            <span class="mat-chip">Agentes</span>
-            <span class="mat-chip">Automação</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mat-card soon">
-      <div class="mat-card-top">
-        <span class="soon-badge">Em breve</span>
-        <div class="mat-tag">Guia prático</div>
-        <div class="mat-title">Como escrever prompts que funcionam</div>
-      </div>
-      <div class="mat-card-body">
-        <div class="mat-desc">Técnicas de prompt engineering para resultados consistentes e de alta qualidade nas tarefas do dia a dia da sua empresa.</div>
-        <div class="mat-meta">
-          <div class="mat-chips">
-            <span class="mat-chip">Prompts</span>
-            <span class="mat-chip">Produtividade</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 <?php include 'layouts/footer.php'; ?>
