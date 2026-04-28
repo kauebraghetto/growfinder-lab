@@ -51,7 +51,7 @@ Plataforma de mentoria da Growfinder — área exclusiva para mentorados com mat
 
 ## Banco de dados
 
-Tabela principal: `usuarios`
+### Tabela: `usuarios`
 
 | Campo | Tipo | Descrição |
 |---|---|---|
@@ -64,6 +64,24 @@ Tabela principal: `usuarios`
 | ultimo_acesso | DATETIME | Último login |
 | reset_token | VARCHAR(64) | Token de reset de senha |
 | reset_expires | DATETIME | Expiração do token |
+
+### Tabela: `conteudos`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| id | INT | PK |
+| tipo | ENUM | `artigo` ou `arquivo` |
+| formato | ENUM | `markdown` ou `html` |
+| titulo | VARCHAR(255) | Título do conteúdo |
+| descricao | TEXT | Descrição curta |
+| corpo | LONGTEXT | Corpo do artigo (Markdown ou HTML) |
+| arquivo | VARCHAR(255) | Nome do arquivo em `uploads/` |
+| categoria | VARCHAR(100) | Agrupamento em materiais.php |
+| tags | VARCHAR(255) | Tags separadas por vírgula |
+| status | ENUM | `publicado` ou `rascunho` |
+| ordem | INT | Ordenação dentro da categoria |
+| criado_em | DATETIME | Data de criação |
+| atualizado_em | DATETIME | Última atualização |
 
 ---
 
@@ -102,6 +120,10 @@ Via WinSCP ou FileZilla para `public_html/lab/` na Hostinger. Não subir `config
 
 ---
 
-## Roadmap
+## CMS de Conteúdos
 
-- [ ] CMS dinâmico para publicação de artigos e uploads (ver `cms-implementacao.md`)
+O painel admin possui um CMS para publicar artigos e upload de arquivos sem editar código. Conteúdos são exibidos dinamicamente em `materiais.php` agrupados por categoria.
+
+- Artigos: corpo em Markdown, renderizado via Parsedown
+- Arquivos: upload para `uploads/` (extensões permitidas: .pdf, .doc, .docx, .xls, .xlsx, .md)
+- Status: `publicado` (visível) ou `rascunho` (oculto)
