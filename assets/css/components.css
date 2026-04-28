@@ -632,7 +632,9 @@ input[type="password"]:focus { border-color: var(--ink); }
 }
 
 .mat-main {
+  flex: 1;
   max-width: 1100px;
+  width: 100%;
   margin: 0 auto;
   padding: 40px 48px 80px;
 }
@@ -694,13 +696,41 @@ input[type="password"]:focus { border-color: var(--ink); }
   justify-content: flex-end;
 }
 
+.mat-card-top-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
 .mat-tag {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 6px;
+}
+
+.mat-tag-download {
+  color: #0077aa;
+  font-weight: 600;
+}
+
+.mat-type {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(255,75,52,0.25);
+  color: var(--accent);
+}
+
+.mat-type-download {
+  background: rgba(0,119,170,0.25);
+  color: #0077aa;
+  font-weight: 600;
 }
 
 .mat-title {

@@ -62,7 +62,7 @@ body {
 }
 
 .card-body {
-  background: rgba(242,240,239,0.04);
+  background: #111111;
   border: 1px solid rgba(242,240,239,0.1);
   border-radius: 12px;
   padding: 36px 32px;
@@ -94,6 +94,7 @@ body {
 
 .field-wrap { margin-bottom: 16px; }
 
+input[type="text"],
 input[type="email"],
 input[type="password"] {
   width: 100%;

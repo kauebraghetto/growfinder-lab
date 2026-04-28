@@ -60,6 +60,7 @@
   font-weight: 600;
   letter-spacing: -0.2px;
   margin: 36px 0 14px;
+  scroll-margin-top: 80px;
 }
 
 .artigo-corpo h3 {
@@ -156,7 +157,102 @@
   color: #e03a22;
 }
 
+/* ── BARRA DE PROGRESSO ── */
+.progress-bar {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: var(--ink);
+  z-index: 99;
+  transition: width 0.08s linear;
+  pointer-events: none;
+}
+
+/* ── BOTÃO VOLTAR AO TOPO ── */
+.btn-topo {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 40px;
+  height: 40px;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, background 0.15s;
+  z-index: 90;
+}
+
+.btn-topo.visivel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.btn-topo:hover { background: #333; }
+
+/* ── SUMÁRIO LATERAL ── */
+.artigo-toc {
+  position: fixed;
+  top: 96px;
+  left: 24px;
+  width: 260px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  display: none;
+}
+
+.toc-titulo {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 12px;
+}
+
+.toc-list { list-style: none; }
+
+.toc-item { margin-bottom: 6px; }
+
+.toc-link {
+  font-size: 12px;
+  color: #999;
+  text-decoration: none;
+  line-height: 1.4;
+  display: block;
+  border-left: 2px solid transparent;
+  padding-left: 8px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.toc-link:hover { color: var(--ink); }
+
+.toc-link.ativa {
+  color: var(--ink);
+  border-left-color: var(--accent);
+}
+
+.artigo-toc::-webkit-scrollbar { display: none; }
+
+@media (min-width: 1200px) {
+  .artigo-toc { display: block; }
+}
+
 @media (max-width: 640px) {
   .artigo-page { padding: 24px 20px 60px; }
   .artigo-titulo { font-size: 24px; }
+  .btn-topo { bottom: 20px; right: 20px; }
 }

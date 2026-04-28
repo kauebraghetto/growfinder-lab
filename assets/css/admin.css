@@ -4,20 +4,19 @@
 
 /* ── HEADER ADMIN (override layout.css) ── */
 .header-admin {
-  background: var(--ink);
-  border-bottom: 2px solid var(--accent);
+  background: var(--accent);
   position: relative;
   top: auto;
   z-index: auto;
 }
 
 .header-admin .wordmark {
-  color: var(--bg);
+  color: var(--white);
   letter-spacing: -0.3px;
   line-height: 1;
 }
 
-.header-admin .wordmark span { color: var(--accent); }
+.header-admin .wordmark span { color: var(--ink); }
 
 .header-sub {
   font-size: 12px;
@@ -31,20 +30,41 @@
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
-  background: var(--accent);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
   padding: 4px 10px;
   border-radius: 3px;
 }
 
-.header-admin .btn-sair {
-  color: rgba(242,240,239,0.35);
-  border-color: rgba(242,240,239,0.12);
+/* ── ADMIN NAV ── */
+.header-admin { position: relative; }
+
+.admin-nav {
+  display: flex;
+  gap: 2px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.header-admin .btn-sair:hover {
-  color: rgba(242,240,239,0.8);
-  border-color: rgba(242,240,239,0.3);
+.admin-nav-link {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 5px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.65);
+  transition: all 0.15s;
+}
+
+.admin-nav-link:hover {
+  color: var(--white);
+  background: rgba(255,255,255,0.12);
+}
+
+.admin-nav-link.active {
+  background: var(--ink);
+  color: var(--white);
 }
 
 /* ── MAIN ── */
@@ -151,7 +171,8 @@
 
 input[type=text],
 input[type=email],
-input[type=password] {
+input[type=password],
+input[type=number] {
   width: 100%;
   background: var(--bg);
   border: 1px solid rgba(0,0,0,0.12);
@@ -168,17 +189,8 @@ input:focus { border-color: var(--ink); }
 
 .btn-add {
   background: var(--accent);
-  color: var(--ink);
-  font-family: var(--f);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 7px;
+  color: var(--white);
   border: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
-  height: 40px;
 }
 
 .btn-add:hover { background: #e03a22; }
@@ -376,126 +388,6 @@ td {
   text-align: center;
   color: #aaa;
   font-size: 13px;
-}
-
-/* ── ADMIN LOGIN ── */
-body.admin-login {
-  background: var(--ink);
-  color: var(--bg);
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.admin-login .bg-pattern {
-  position: fixed;
-  inset: 0;
-  opacity: 0.04;
-  background-image: repeating-linear-gradient(45deg, var(--bg) 0, var(--bg) 1px, transparent 1px, transparent 40px);
-  pointer-events: none;
-}
-
-.admin-login .login-card {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 380px;
-  padding: 0 24px;
-}
-
-.admin-login .login-brand { margin-bottom: 40px; }
-
-.admin-login .login-wordmark {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--bg);
-}
-
-.admin-login .login-slogan {
-  font-size: 11px;
-  font-weight: 300;
-  color: rgba(242,240,239,0.4);
-  margin-top: 4px;
-}
-
-.admin-login .login-card-body {
-  background: rgba(242,240,239,0.04);
-  border: 1px solid rgba(242,240,239,0.1);
-  border-radius: 12px;
-  padding: 32px;
-}
-
-.admin-login .login-card-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.admin-login .login-card-sub {
-  font-size: 13px;
-  font-weight: 300;
-  color: rgba(242,240,239,0.45);
-  margin-bottom: 24px;
-  line-height: 1.5;
-}
-
-.admin-login .login-field-wrap { margin-bottom: 14px; }
-
-.admin-login .login-field-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: rgba(242,240,239,0.45);
-  margin-bottom: 7px;
-  display: block;
-}
-
-.admin-login input {
-  width: 100%;
-  background: rgba(242,240,239,0.06);
-  border: 1px solid rgba(242,240,239,0.15);
-  border-radius: 7px;
-  padding: 12px 14px;
-  font-family: var(--f);
-  font-size: 14px;
-  color: var(--bg);
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.admin-login input:focus { border-color: var(--accent); }
-
-.admin-login .login-btn {
-  width: 100%;
-  background: var(--accent);
-  color: var(--ink);
-  font-family: var(--f);
-  font-size: 14px;
-  font-weight: 600;
-  padding: 13px;
-  border-radius: 7px;
-  border: none;
-  cursor: pointer;
-  margin-top: 6px;
-  transition: background 0.15s;
-}
-
-.admin-login .login-btn:hover { background: #e03a22; }
-
-.admin-login .login-erro {
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--accent);
-  text-align: center;
-}
-
-.admin-login .login-footer-note {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 300;
-  color: rgba(242,240,239,0.2);
 }
 
 /* ── RESPONSIVE ── */

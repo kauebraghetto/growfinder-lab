@@ -42,7 +42,7 @@ include 'layouts/header.php';
 <?php foreach ($categorias as $cat => $items): ?>
   <div class="mat-section-header">
     <span class="mat-section-title"><?= htmlspecialchars($cat) ?></span>
-    <span class="mat-section-count"><?= count($items) ?> material<?= count($items) > 1 ? 'is' : '' ?></span>
+    <span class="mat-section-count"><?= count($items) === 1 ? '1 material' : count($items) . ' materiais' ?></span>
   </div>
 
   <div class="grid">
@@ -50,7 +50,10 @@ include 'layouts/header.php';
     <?php if ($c['tipo'] === 'artigo'): ?>
     <a class="mat-card" href="artigo.php?id=<?= $c['id'] ?>">
       <div class="mat-card-top">
-        <div class="mat-tag"><?= htmlspecialchars($c['categoria'] ?: 'Artigo') ?></div>
+        <div class="mat-card-top-meta">
+          <div class="mat-tag"><?= htmlspecialchars($c['categoria'] ?: 'Artigo') ?></div>
+          <span class="mat-type">Artigo</span>
+        </div>
         <div class="mat-title"><?= htmlspecialchars($c['titulo']) ?></div>
       </div>
       <div class="mat-card-body">
@@ -72,9 +75,13 @@ include 'layouts/header.php';
       </div>
     </a>
     <?php else: ?>
-    <a class="mat-card" href="uploads/<?= htmlspecialchars($c['arquivo']) ?>" download>
+    <?php $ext = strtolower(pathinfo($c['arquivo'], PATHINFO_EXTENSION)); ?>
+    <a class="mat-card" href="uploads/<?= htmlspecialchars($c['arquivo']) ?>" <?= $ext !== 'pdf' ? 'download' : 'target="_blank"' ?>>
       <div class="mat-card-top">
-        <div class="mat-tag"><?= strtoupper(pathinfo($c['arquivo'], PATHINFO_EXTENSION)) ?></div>
+        <div class="mat-card-top-meta">
+          <div class="mat-tag mat-tag-download"><?= strtoupper(pathinfo($c['arquivo'], PATHINFO_EXTENSION)) ?></div>
+          <span class="mat-type mat-type-download">Download</span>
+        </div>
         <div class="mat-title"><?= htmlspecialchars($c['titulo']) ?></div>
       </div>
       <div class="mat-card-body">
