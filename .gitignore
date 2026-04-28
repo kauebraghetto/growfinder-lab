@@ -1,0 +1,12 @@
+# Configuração do banco de dados (contém senhas)
+config.php
+
+# Arquivos locais do Claude Code
+.claude/
+
+# Uploads de usuários
+uploads/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
