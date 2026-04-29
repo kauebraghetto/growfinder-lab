@@ -254,5 +254,6 @@
 @media (max-width: 640px) {
   .artigo-page { padding: 24px 20px 60px; }
   .artigo-titulo { font-size: 24px; }
-  .btn-topo { bottom: 20px; right: 20px; }
+  .artigo-toc { display: none !important; }
+  .btn-topo { display: none !important; }
 }
